@@ -39,13 +39,13 @@ Install cygwin and download this package :
 
 - **cygwin-devel** for termios support (check when a key is pressed)
 - **gcc-core** to compile the c files
-- **make** for make the project with one command only
+- **make** to build the project in one command
 
 ## Play a game
 
 In your terminal, go to the bin directory and launch the file.
 
-If you are on windows and didn't install or add to the path the cygwin bin folder, you can :
+If you are on windows and want to run the game after building it, you can :
 
 - Add the bin folder of cygwin to the path
 - Copy the cygwin1.dll file from the bin folder of cygwin and paste it in the bin directory of the game
