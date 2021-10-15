@@ -6,6 +6,7 @@
 #include <rawTerminal.h>
 #if defined _WIN32 || defined _WIN64
 #include <windows.h>
+#include <conio.h>
 #else
 #include <termios.h>
 #endif
@@ -19,9 +20,9 @@ int main2(void)
 {
   int ch;
   changemode(1);
-  while ( !kbhit() );      // Waiting for some keyboard input.
+  while ( !kbhit() );      /* Waiting for some keyboard input.*/
 
-  // something has been detected. now get that.
+  /* something has been detected. now get that.*/
   ch = getchar();
 
   printf("\nGot %c\n", ch);
@@ -38,8 +39,8 @@ void changemode(bool dir)
   {
     tcgetattr( STDIN_FILENO, &oldTerminal);
     newTerminal = oldTerminal;
-    //&= : et binaire
-    // ~() : négation binaire
+    /*&= : et binaire
+     ~() : négation binaire*/
     newTerminal.c_lflag &= ~( ICANON | ECHO );
     tcsetattr( STDIN_FILENO, TCSANOW, &newTerminal);
   }
@@ -47,7 +48,7 @@ void changemode(bool dir)
     tcsetattr( STDIN_FILENO, TCSANOW, &oldTerminal);
 }
 #ifndef _WIN32
-//Cette fonction est disponible sur windows
+/*Cette fonction est disponible sur windows*/
 int kbhit (void) 
 {
   struct timeval tv;

@@ -9,7 +9,7 @@ OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 CC = gcc -O
 
-CFLAGS   := -Iinclude -MMD -MP -g -Wall
+CFLAGS   := -Iinclude -Wextra -ansi -pedantic
 LDFLAGS  := -Llib
 LDLIBS   := -lm
 DEBUGFLAGS := -ggdb -DDEBUG -DSTEPBYSTEP 
@@ -29,6 +29,9 @@ $(BIN_DIR) $(OBJ_DIR):
 
 debug: $(OBJ) | $(BIN_DIR)
 	$(CC) $(DEBUGFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $(DEBUGEXE)
+	
+$(OBJ_DIR)/*-d.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:
 	@$(RM) -rv $(BIN_DIR) $(OBJ_DIR)

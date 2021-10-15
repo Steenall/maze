@@ -1,19 +1,14 @@
 #include "util.h"
 #include "maze.h"
+#include "saveManager.h"
 #include "rawTerminal.h"
 #include <ctype.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#if defined __CYGWIN__
-
-#define KEY_UP 'A'
-#define KEY_DOWN 'B'
-#define KEY_RIGHT 'C'
-#define KEY_LEFT 'D'
-#define ARROW_KEYS "ABCD"
-#elif defined _WIN32 || defined _WIN64
+#if defined _WIN32 || defined _WIN64
 #define KEY_UP 'H'
 #define KEY_DOWN 'K'
 #define KEY_RIGHT 'P'
@@ -39,10 +34,21 @@ bool promptBool(char * sentence) {
 }
 
 
-char * promptSentence(char * sentence) {
-    char * response = malloc(sizeof(char) * 50);
-    printf("%s ", sentence);
-    scanf("%[\n]\n", response);
+char * promptSentence(char * sentence, int * len) {
+    char c;
+    char * response;
+    int i;
+    i = 0;
+    response = malloc(sizeof(char) * 50);
+    printf("%s", sentence);
+    c = getchar();
+    if(c!='\n'){
+        response[i++] = c;
+    }
+    while(i < 50 && (c = getchar()) != '\n'){
+        response[i++] = c;
+    }
+    printf("----\n%s\n----", response);
     return response;
 }
 
@@ -66,7 +72,7 @@ char movePlayer() {
 
     changemode(0);
     if(specialChar && response){
-        response = response - UPARROW; // Transform arrow key to zqsd key
+        response = response - UPARROW; /* Transform arrow key to zqsd key */
     }else {
         response = *strchr(directions, response);
     }
@@ -81,14 +87,20 @@ char promptChar(char * sentence, char * availableResponse, bool arrowKey) {
         specialChar = false;
         while ( !kbhit() );
         response = (char) getchar();
+        #ifdef DEBUG
         printf("%d\n", response);
+        #endif
         if(response=='\033'){
             specialChar = true;
+            #ifdef DEBUG
             printf("%d\n", getchar());
+            #else
+            getchar();
+            #endif
             response = (char) getchar();
         }
     }while( (!specialChar && strstr(availableResponse, &response) == 0) &&
-        !(specialChar && arrowKey && response >= (char) UPARROW && response <= (char) LEFTARROW));
+        !(specialChar && arrowKey && strstr(ARROW_KEYS, &response)));
     changemode(0);
     if(specialChar && response){
         switch (response)
@@ -108,12 +120,76 @@ char promptChar(char * sentence, char * availableResponse, bool arrowKey) {
         }
     }
     return response;
-    /*
-    do{
+    /* do{
         printf("%c ", sentence);
         response = tolower(getchar());
     }while(strstr(availableResponse, &response)==0);
     return response;*/
+}
+
+int getInt(){
+    int val;
+    if(scanf("%d",&val)!=1){
+        printf("Error when using scanf %d", errno);
+        exit(1);
+    }
+    return val;
+}
+
+int selectSaveFile(SaveFilesList saves) {
+    char response;
+    int selected;
+    int i;
+    char * c;
+    selected = 0;
+    response = getchar();
+    printf("\033[?25l");
+    do {
+        printf("\033[H\033[2J");
+        printf("Fichiers de sauvegardes :\n");
+        for(i=0; i< saves.length; i++) {
+            if(selected == i) {
+                c = "\033[47m \033[0m";
+            }else{
+                c = " ";
+            }
+            printf("\t[%s] %s\n", c, saves.saveFilesList[i]);
+        }
+        changemode(1);
+        while ( !kbhit() );
+        response = (char) getchar();
+        changemode(0);
+        switch (response)
+        {
+        case 'z':
+            if(selected > 0){
+                selected--;
+            }
+            break;
+        case 's':
+            if(selected < saves.length -1){
+                selected++;
+            }
+            break;
+        case '\033':
+            getchar();
+            response = (char) getchar();
+            if(response == KEY_UP){
+                if(selected > 0){
+                    selected--;
+                }
+            }else if(response==KEY_DOWN){
+                if(selected < saves.length -1){
+                    selected++;
+                }
+            }
+        }
+        printf("%d\n", response);
+        printf("%d\n", selected);
+    }while(response!='\x0D' && response != '\x0A' && response != 32);
+    /* Detect CR, LF or space */
+    printf("\033[?25h");
+    return selected;
 }
 
 #ifdef DEBUG_UTIL

@@ -6,15 +6,29 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <string.h>
+#include "util.h"
 
-#define SAVE_DIRECTORY_NAME "saves"
+#define SAVE_DIRECTORY_NAME "./saves/"
 #define EXTENSION ".cfg"
+
+void checkReturnValueForScanf(int valueOfScanf, int goodReturnValue) {
+    if(valueOfScanf!=goodReturnValue) {
+        if(valueOfScanf==EOF) {
+            printf("Error %d when calling scanf function\n", errno);
+            exit(errno);
+        }
+        printf("Unknown erro when calling scanf, scanf didn't read or write all the values needed");
+    }
+}
 
 SaveFilesList listSaveFiles() {
     SaveFilesList saveFilesList;
-    saveFilesList.length =0;
     struct dirent *d;
-	DIR *dh = opendir(SAVE_DIRECTORY_NAME);
+	DIR *dh;
+    int i;
+    saveFilesList.length = 0;
+    i = 0;
+    dh = opendir(SAVE_DIRECTORY_NAME);
 	if (!dh) {
 		if (errno = ENOENT) {
             #ifdef _WIN32
@@ -42,8 +56,8 @@ SaveFilesList listSaveFiles() {
 		    exit(EXIT_FAILURE);
 		}
 	}
-    int i=0;
-    saveFilesList.saveFilesList = malloc(sizeof(char*)*256); //On estime qu'il est imporbable d'avoir plus de 256 fichiers de sauvegardes
+    /*On estime qu'il est imporbable d'avoir plus de 256 fichiers de sauvegardes */
+    saveFilesList.saveFilesList = malloc(sizeof(char*)*256);
 	while ((d = readdir(dh)) != NULL)
 	{
         if(strcmp(d->d_name, ".")==0||strcmp(d->d_name, "..")==0) {
@@ -60,53 +74,69 @@ SaveFilesList listSaveFiles() {
 
 Maze * readSaveFile(char * saveFile) {
     FILE *fptr;
-    if ((fptr = fopen(saveFile, "r")) == NULL) {
+    int i;
+    int err;
+    Maze * maze;
+    char * path;
+    maze = malloc(sizeof(Maze));
+    path = malloc(sizeof(char)*(strlen(saveFile)+5+strlen(SAVE_DIRECTORY_NAME)));
+    strcpy(path, SAVE_DIRECTORY_NAME);
+    strcat(path, saveFile);
+    if ((fptr = fopen(path, "r")) == NULL) {
         printf("Error! File cannot be opened.");
         exit(1);
     }
-    Maze * maze = malloc(sizeof(Maze));
-    fscanf(fptr, "%hd;%hd\n", &(maze->height), &(maze->width));
+    err = fscanf(fptr, "%hd;%hd\n", &(maze->height), &(maze->width));
+    /* checkReturnValueForScanf(err, 2); */
     maze->maze = malloc(sizeof(char * )* maze->height);
-    for(int i=0; i<maze->height; i++){
+    for(i=0; i<maze->height-1; i++){
         printf("%d\n", i);
         maze->maze[i] = calloc(maze->width, sizeof(char));
-        fscanf(fptr, "%[^\n]\n", maze->maze[i]);
+        err = fscanf(fptr, "%[^\n]\n", maze->maze[i]);
+        /* checkReturnValueForScanf(err, 1); */
     }
-    fscanf(fptr, "%hd;%hd\n", &(maze->playerPos[0]), &(maze->playerPos[1]));
-    fscanf(fptr, "%hd;%hd", &(maze->goalPos[0]), &(maze->goalPos[1]));
+    err = fscanf(fptr, "%hd;%hd\n", &(maze->playerPos[0]), &(maze->playerPos[1]));
+    checkReturnValueForScanf(err, 2);
+    err = fscanf(fptr, "%hd;%hd", &(maze->goalPos[0]), &(maze->goalPos[1]));
+    printf("%hd %hd\n", maze->goalPos[0], maze->goalPos[1]);
+    printf("%hd %hd\n", maze->playerPos[0], maze->playerPos[1]);
+    checkReturnValueForScanf(err, 2);
     fclose(fptr);
     return maze;
 }
 
-static bool fileExist(char * saveFile) {
+bool fileExist(char * saveFile) {
     FILE *fptr;
-    bool res= (fptr = fopen(saveFile, "r")) == NULL;
-    fclose(fptr);
-    return res;
+    fptr = fopen(saveFile, "r");
+    if(fptr!=NULL)
+        fclose(fptr);
+    return fptr!=NULL;
 }
 
-int save(Maze maze, char * saveFile) {
+int save(Maze maze, char * saveFile, int len) {
     FILE *fptr;
-    int blen = strlen(saveFile);
-    if((blen < 4) || (0 != strcmp(saveFile + blen - 4, EXTENSION))){
+    int i;
+    char * path;
+    printf("%s\n", saveFile);
+    if((len < 4) || (0 != strcmp(saveFile + len - 4, EXTENSION))){
         saveFile = strcat(saveFile, EXTENSION);
+        printf("\n%s\n", saveFile);
     }
-    if(fileExist(saveFile)){
-        char response;
-        do{
-            printf("Error, another file with the same name has been detected, would you like to overwrite it ? [Y/N] ");
-            scanf("%c", &response);
-        }while(response!='Y'&&response!='y'&&response!='n'&&response!='N');
-        if(response=='n'||response=='N') {
+    path = malloc(sizeof(char)*(len+5+strlen(SAVE_DIRECTORY_NAME)));
+    strcpy(path, SAVE_DIRECTORY_NAME);
+    strcat(path, saveFile);
+    printf("%s", path);
+    if(fileExist(path)){
+        if(!promptBool("Error, another file with the same name has been detected, would you like to overwrite it ?")){
             return 1;
         }
     }
-    if ((fptr = fopen(saveFile, "w")) == NULL) {
+    if ((fptr = fopen(path, "w")) == NULL) {
         printf("Error! File cannot be created.");
         exit(1);
     }
     fprintf(fptr, "%hd;%hd\n", maze.height, maze.width);
-    for(int i=0; i<maze.height-1; i++) {
+    for(i=0; i<maze.height-1; i++) {
         fprintf(fptr, "%s\n", maze.maze[i]);
     }
     fprintf(fptr, "%hd;%hd\n", maze.playerPos[0], maze.playerPos[1]);

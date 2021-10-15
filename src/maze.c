@@ -18,14 +18,26 @@ typedef struct {
     bool ** horizontalWall;
 }MazeConstructor;
 
+int min(int a, int b) {
+    return a < b ? a : b;
+}
+
+int max(int a, int b) {
+    return a < b ? b : a;
+}
+
 Maze * toMaze(MazeConstructor maze) {
-    Maze * finalMaze = malloc(sizeof(Maze));
-    finalMaze->height = (HEIGHT+1)*2; //We need * 2 size because we need to two information per box (for the final box, the wall and a character \0 to end the string)
+    int count, j, i;
+    Maze * finalMaze;
+    count = 0;
+    finalMaze = malloc(sizeof(Maze));
+    /*We need * 2 size because we need to two information per box
+    (for the final box, the wall and a character \0 to end the string)*/
+    finalMaze->height = (HEIGHT+1)*2;
     finalMaze->width = (WIDTH+1)*2;
     finalMaze->maze = malloc(sizeof(char *)* finalMaze->height);
     finalMaze->maze[0] = calloc(finalMaze->width, sizeof(char));
-    int count = 0;
-    for(int j=0; j<WIDTH; j++) {
+    for(j=0; j<WIDTH; j++) {
         if(maze.horizontalWall[0][j]) {
             finalMaze->maze[count][j*2] = WALL_CHAR;
             finalMaze->maze[count][j*2+1] = WALL_CHAR;
@@ -41,14 +53,14 @@ Maze * toMaze(MazeConstructor maze) {
     finalMaze->maze[count][(WIDTH)*2] = WALL_CHAR;
     finalMaze->maze[count++][(WIDTH*2)+1] = 0;
     finalMaze->maze[1] = calloc(finalMaze->width, sizeof(char));
-    for(int j=0; j<=WIDTH; j++) {
+    for(j=0; j<=WIDTH; j++) {
         finalMaze->maze[count][j*2] = maze.verticalWall[0][j] ? WALL_CHAR : ' ';
         finalMaze->maze[count][j*2+1] = ' ';
     }
     finalMaze->maze[count++][(WIDTH*2)+1] = 0;
-    for(int i=1; i<HEIGHT; i++) {
+    for(i=1; i<HEIGHT; i++) {
         finalMaze->maze[count] = calloc(finalMaze->width, sizeof(char));
-        for(int j=0; j<WIDTH; j++){
+        for(j=0; j<WIDTH; j++){
             finalMaze->maze[count][j*2] = maze.verticalWall[i][j] ? WALL_CHAR : ' ';
             finalMaze->maze[count][j*2+1] = maze.horizontalWall[i][j] ? WALL_CHAR : ' ';
         }
@@ -57,14 +69,14 @@ Maze * toMaze(MazeConstructor maze) {
         }
         finalMaze->maze[count++][(WIDTH*2)+1] = 0;
         finalMaze->maze[count] = calloc(finalMaze->width, sizeof(char));
-        for(int j=0; j<=WIDTH; j++) {
+        for(j=0; j<=WIDTH; j++) {
             finalMaze->maze[count][j*2] = maze.verticalWall[i][j] ? WALL_CHAR : ' ';
             finalMaze->maze[count][j*2+1] = ' ';
         }
         finalMaze->maze[count++][(WIDTH*2)+1] = 0;
     }
     finalMaze->maze[count] = calloc(finalMaze->width, sizeof(char));
-    for(int j=0; j<WIDTH; j++){
+    for(j=0; j<WIDTH; j++){
         if(maze.horizontalWall[HEIGHT][j]) {
             finalMaze->maze[count][j*2] = WALL_CHAR;
             finalMaze->maze[count][j*2+1] = WALL_CHAR;
@@ -84,23 +96,24 @@ Maze * toMaze(MazeConstructor maze) {
 }
 
 void initMazeConstructor(MazeConstructor * maze) {
-    int count = 0;
-    for(int i=0; i<HEIGHT; i++) {
-        for(int j=0; j<WIDTH; j++) {
+    int i, j, count = 0;
+    for(i=0; i<HEIGHT; i++) {
+        for(j=0; j<WIDTH; j++) {
             maze->maze[i][j] = count++;
             maze->horizontalWall[i][j] = true;
             maze->verticalWall[i][j] = true;
         }
         maze->verticalWall[i][WIDTH] = true;
     }
-    for(int j=0; j<WIDTH; j++) {
+    for(j=0; j<WIDTH; j++) {
         maze->horizontalWall[HEIGHT][j] = true;
     }
 }
 
 bool isMazeConstructorFill(MazeConstructor maze) {
-    for(int i=0; i<HEIGHT; i++) {
-        for(int j=0; j<WIDTH; j++) {
+    int i, j;
+    for(i=0; i<HEIGHT; i++) {
+        for(j=0; j<WIDTH; j++) {
             if(maze.maze[i][j]){
                 return false;
             }
@@ -110,11 +123,12 @@ bool isMazeConstructorFill(MazeConstructor maze) {
 }
 void newMaze2(MazeConstructor mazeConstructor) {
     char ** test = malloc(sizeof(char*) * (HEIGHT+1) * 3);
-    for(int i=0; i<HEIGHT; i++) {
+    int i, j;
+    for(i=0; i<HEIGHT; i++) {
         test[i*3] = calloc((WIDTH+1)*3, sizeof(char));
         test[i*3+1] = calloc((WIDTH+1)*3, sizeof(char));
         test[i*3+2] = calloc((WIDTH+1)*3, sizeof(char));
-        for(int j=0; j<WIDTH; j++){
+        for(j=0; j<WIDTH; j++){
             test[i*3+1][j*3+1] = ' ';
             test[i*3][j*3] = '#';
             test[i*3+2][j*3] = '#';
@@ -142,8 +156,8 @@ void newMaze2(MazeConstructor mazeConstructor) {
             }
         }
     }
-    for(int i=0; i<HEIGHT*3; i++) {
-        for(int j=0; j<WIDTH*3; j++) {
+    for(i=0; i<HEIGHT*3; i++) {
+        for(j=0; j<WIDTH*3; j++) {
             printf("%c", test[i][j]);
         }
         free(test[i]);
@@ -152,31 +166,32 @@ void newMaze2(MazeConstructor mazeConstructor) {
     free(test);
 }
 void printMazeConstructor(MazeConstructor maze) {
-    for(int j=0; j<WIDTH; j++) {
+    int i, j;
+    for(j=0; j<WIDTH; j++) {
         printf("%s", maze.horizontalWall[0][j] ? "##" : "  ");
     }
     if(maze.verticalWall[0][WIDTH] ) {
         printf("#");
     }
     printf("\n");
-    for(int j=0; j<=WIDTH; j++) {
+    for(j=0; j<=WIDTH; j++) {
         printf("%c ", maze.verticalWall[0][j] ? '#' : ' ');
     }
     printf("\n");
-    for(int i=1; i<HEIGHT; i++) {
-        for(int j=0; j<WIDTH; j++){
+    for(i=1; i<HEIGHT; i++) {
+        for(j=0; j<WIDTH; j++){
             printf("%c%c", maze.verticalWall[i][j] ? '#' : ' ' ,maze.horizontalWall[i][j] ? '#' : ' ');
         }
         if(maze.verticalWall[i][WIDTH] ) {
             printf("#");
         }
         printf("\n");
-        for(int j=0; j<=WIDTH; j++) {
+        for(j=0; j<=WIDTH; j++) {
             printf("%c ", maze.verticalWall[i][j] ? '#' : ' ');
         }
         printf("\n");
     }
-    for(int j=0; j<WIDTH; j++){
+    for(j=0; j<WIDTH; j++){
         printf("%s", maze.horizontalWall[HEIGHT][j] ? "##" : "  ");
     }
     if(maze.verticalWall[HEIGHT-1][WIDTH] ) {
@@ -203,44 +218,44 @@ void fillMazeConstructor(MazeConstructor * maze) {
     Direction wichWall;
     int wichBox, col, line, newIndice, oldIndice;
     while(!isMazeConstructorFill(*maze)){
-        //printMazeConstructor(*maze);
+        /*printMazeConstructor(*maze);*/
         wichWall = rand() % 4;
         wichBox = rand() % (WIDTH*HEIGHT);
         line = wichBox % HEIGHT;
         col = floor(wichBox /HEIGHT);
         oldIndice = 0;
         newIndice = 0;
-        //printf("\n\n[%d %d]\n\n", line, col);
+        /*printf("\n\n[%d %d]\n\n", line, col);*/
         switch (wichWall)
         {
         case TOP:
             if((line != 0) && maze->maze[line][col] != maze->maze[line-1][col]){
-                newIndice = fmin(maze->maze[line][col], maze->maze[line-1][col]);
-                oldIndice = fmax(maze->maze[line][col], maze->maze[line-1][col]);
+                newIndice = min(maze->maze[line][col], maze->maze[line-1][col]);
+                oldIndice = max(maze->maze[line][col], maze->maze[line-1][col]);
                 maze->horizontalWall[line][col] = false;
                 replace(maze, oldIndice, newIndice, line-1, col);
             }
             break;
         case BOTTOM:
             if((line != HEIGHT-1) && maze->maze[line][col] != maze->maze[line+1][col]){
-                newIndice = fmin(maze->maze[line][col], maze->maze[line+1][col]);
-                oldIndice = fmax(maze->maze[line][col], maze->maze[line+1][col]);
+                newIndice = min(maze->maze[line][col], maze->maze[line+1][col]);
+                oldIndice = max(maze->maze[line][col], maze->maze[line+1][col]);
                 maze->horizontalWall[line+1][col] = false;
                 replace(maze, oldIndice, newIndice, line+1, col);
             }
             break;
         case LEFT:
             if((col != 0) && maze->maze[line][col] != maze->maze[line][col-1]){
-                newIndice = fmin(maze->maze[line][col], maze->maze[line][col-1]);
-                oldIndice = fmax(maze->maze[line][col], maze->maze[line][col-1]);
+                newIndice = min(maze->maze[line][col], maze->maze[line][col-1]);
+                oldIndice = max(maze->maze[line][col], maze->maze[line][col-1]);
                 maze->verticalWall[line][col] = false;
                 replace(maze, oldIndice, newIndice, line, col-1);
             }
             break;
         default:
             if((col != WIDTH -1) && maze->maze[line][col] != maze->maze[line][col+1]){
-                newIndice = fmin(maze->maze[line][col], maze->maze[line][col+1]);
-                oldIndice = fmax(maze->maze[line][col], maze->maze[line][col+1]);
+                newIndice = min(maze->maze[line][col], maze->maze[line][col+1]);
+                oldIndice = max(maze->maze[line][col], maze->maze[line][col+1]);
                 maze->verticalWall[line][col+1] = false;
                 replace(maze, oldIndice, newIndice, line, col+1);
             }
@@ -275,11 +290,12 @@ void prepareMaze(Maze * maze){
 }
 
 MazeConstructor * newMazeConstructor() {
+    int i;
     MazeConstructor * maze = malloc(sizeof(MazeConstructor));
     maze->maze = malloc(sizeof(int*) * HEIGHT);
     maze->verticalWall = malloc(sizeof(bool*) * HEIGHT);
     maze->horizontalWall = malloc(sizeof(bool*) * (HEIGHT+1));
-    for(int i=0; i<HEIGHT; i++) {
+    for(i=0; i<HEIGHT; i++) {
         maze->maze[i] = calloc(WIDTH, sizeof(int));
         maze->verticalWall[i] = calloc(WIDTH+1, sizeof(bool));
         maze->horizontalWall[i] = calloc(WIDTH, sizeof(bool));
@@ -292,7 +308,8 @@ MazeConstructor * newMazeConstructor() {
 }
 
 void freeMazeConstructor(MazeConstructor * maze) {
-    for(int i=0; i<HEIGHT; i++){
+    int i;
+    for(i=0; i<HEIGHT; i++){
         free(maze->horizontalWall[i]);
         free(maze->verticalWall[i]);
         free(maze->maze[i]);
@@ -313,7 +330,8 @@ Maze * newMaze() {
 }
 
 void freeMaze(Maze * maze) {
-    for(int i=0; i<maze->height; i++) {
+    int i;
+    for(i=0; i<maze->height; i++) {
         free(maze->maze[i]);
     }
     free(maze->maze);
@@ -321,7 +339,8 @@ void freeMaze(Maze * maze) {
 }
 
 void printMaze(Maze maze) {
-    for(int i=0; i<maze.height-1; i++)
+    int i;
+    for(i=0; i<maze.height-1; i++)
         printf("%s\n", maze.maze[i]);
 }
 

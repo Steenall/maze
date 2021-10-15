@@ -11,6 +11,6 @@ typedef enum {OK=0, STOPPED_BY_THE_USER, DIRECTORY_UNREADABLE, FILE_UNREADABLE, 
 
 SaveFilesList listSaveFiles();
 Maze * readSaveFile(char * saveFile);
-int save(Maze maze, char * saveFile);
+int save(Maze maze, char * saveFile, int len);
 
 #endif

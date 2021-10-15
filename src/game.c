@@ -10,19 +10,20 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-char ** listAllSaveFiles() {
-    return NULL;
-}
-
 /**
- * @return if the user want to save the game, it will returns true, else, it returns false 
+ * @return if the user exit the maze manualy, it will returns true, else, it returns false 
  */
 bool start(Maze * maze) {
     char response;
     bool exitTheGame = false;
+    bool invalidPath = false;
     Direction direction;
     do{
         printMaze(*maze);
+        if(invalidPath) {
+            invalidPath = false;
+            printf("\033[31;01mYou cannot move to this direction\033[0;01m\n");
+        }
         response = promptChar("In witch direction do you want to go\n   z (↑) q (←) d (→) s (↓) e (exit)", "zqsde", true);
         printf("\n\033[H\033[2J");
         switch (response)
@@ -43,18 +44,22 @@ bool start(Maze * maze) {
                 exitTheGame = true;
                 break;
             default:
-                perror("There was a problem when parsing the direction");
+                printf("There was a problem when parsing the direction");
                 exit(1);
         }
         if(!exitTheGame && !move(maze, direction)) {
-            printf("\033[31;01mYou cannot move to this direction\033[0;01m\n");
+           invalidPath = true;
         }
     }while(!exitTheGame && !isGameFinished(*maze));
-    return false;
+    return !exitTheGame;
 }
 
 void afficheMenu() {
-    int val = 0;
+    int val;
+    int len;
+    char * name;
+    int i;
+    SaveFilesList saveFiles;
     Maze * maze = NULL;
     printf("\033[H\033[2J\033[36;01m");
     do{
@@ -92,66 +97,64 @@ void afficheMenu() {
         printf("|   ;/        ;  :   .'   \\;   |  .'    |   :    | \n");
         printf("'---'         |  ,     .-./`---'         \\   \\  /  \n");
         printf("               `--`---'                   `----'   \n\n");
-        int val=0;
-        printf("\033[35;01m   Menu\n    \033[34;01m1 - Jouer\n    \033[0;01m2 - Options\n    \033[31;01m3 - Quitter\n\n\033[37;01m");
-        scanf("%d",&val);
+        val = 0;
+        if(maze!=NULL){
+            /*TODO*/
+        }
+        printf("\033[35;01m   Menu\n    \033[34;01m1 - Créer un labyrinthe\n    \033[33;01m2 - Charger un labyrinthe\n    \033[32;01m3 - Jouer\n    \033[31;01m4 - Quitter\n\n\033[37;01m");
+        val = getInt();
         printf("\033[H\033[2J\033[36;01m\033[0;01m");
         switch(val) {
             case 1:
-                if(maze!=NULL) {
-                    if(!promptBool("A game is already loaded, would you like to reload it ?")) {
-                        freeMaze(maze);
-                        maze = newMaze();
-                    }
+                maze = newMaze();
+                name = promptSentence("Comment voulez-vous appelez ce nouveau labyrinthe (Pas plus de 50 caractères) ?\n", &len);
+                save(*maze, name, len);
+                if(promptBool("Do you want to load it ?")){
+                    start(maze);
                 }
-                else {
-                    maze = newMaze();
-                }
-                printf("\033[H\033[2J");
-                if(start(maze)) {
-                    printf("Bravo, vous avez terminé ce labyrinthe.\n");
-                    sleep(5);
-                }
-                else {
-                    if(promptBool("Voulez vous sauvegarder ce labyrinthe ?")){
-                        char * name = malloc(sizeof(char) * 50);
-                        printf("Comment voulez-vous appelez le fichier de sauvegarde (Pas plus de 50 caractères) ?\n");
-                        char car;
-                        int i = 0;
-                        while(i<50 && (car = getchar()) != '\n') {
-                            name[i] = car;
-                        }
-                        name[49] = '\0';
-                        printf("%s", name);
-                        save(*maze, name);
-                    }
-                }
+                freeMaze(maze);
+                maze = NULL;
                 break;
             case 2:
                 printf("\033[H\033[2J");
-                printf("\033[31;01mIl n'y a pas d'options pour le moment\033[0;01m\n");
+                saveFiles = listSaveFiles();
+                i = selectSaveFile(saveFiles);
+                printf("%s\n", saveFiles.saveFilesList[i]);
+                maze = readSaveFile(saveFiles.saveFilesList[i]);
                 break;
             case 3:
                 printf("\033[H\033[2J");
-                exit(0);
+                if(maze==NULL){
+                    printf("\033[31;01mPlease load a maze before starting a game\n");
+                }else{
+                    start(maze);
+                }
+                break;
+            case 4:
+                printf("\033[H\033[2J");
+                if(maze){
+                    freeMaze(maze);
+                    maze = NULL;
+                }
+                break;
             default:
                 printf("\033[H\033[2J");
                 break;
         }
-	}while(val!=1);
-    if(maze) {
-        freeMaze(maze);
-        maze = NULL;
-    }
+	}while(val!=4);
 }
-int main(void) {
+int main(int argc, char ** argv) {
+    int i;
+    for(i=0; i<argc; i++) {
+        printf("%s", argv[i]);
+    }
     #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
     #endif
     #ifdef DEBUG
     int rand;
     printf("Quelle valeur doit être utilisé pour le srand ? ");
-    scanf("%d", &rand);
+    getInt();
     srand(rand);
     #else
     srand(time(NULL));
