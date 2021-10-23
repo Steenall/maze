@@ -16,21 +16,6 @@
  * https://stackoverflow.com/questions/13114301/raw-terminal-mode-how-to-take-in-input
  **/
 
-int main2(void)
-{
-  int ch;
-  changemode(1);
-  while ( !kbhit() );      /* Waiting for some keyboard input.*/
-
-  /* something has been detected. now get that.*/
-  ch = getchar();
-
-  printf("\nGot %c\n", ch);
-
-  changemode(0);
-  return 0;
-}
-
 void changemode(bool dir)
 {
   static struct termios oldTerminal, newTerminal;

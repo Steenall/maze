@@ -22,7 +22,17 @@
 #define ARROW_KEYS "ABCD"
 #endif
 
+#define FORBIDDEN_CHAR "<>:\"/\\|?*\0"
+
 typedef enum {UPARROW=KEY_UP, DOWNARROW=KEY_DOWN, RIGHTARROW=KEY_RIGHT, LEFTARROW=KEY_LEFT}ArrowKey;
+
+int min(int a, int b) {
+    return a < b ? a : b;
+}
+
+int max(int a, int b) {
+    return a < b ? b : a;
+}
 
 bool promptBool(char * sentence) {
     char response;
@@ -34,21 +44,58 @@ bool promptBool(char * sentence) {
 }
 
 
-char * promptSentence(char * sentence, int * len) {
+char * promptSentence(char * sentence, int * len, bool isAFile) {
     char c;
     char * response;
     int i;
-    i = 0;
+    int j;
+    bool verifNoForbiddenChar;
+    bool verifNoSpaceAtBounds;
+    char * illegalChar = {FORBIDDEN_CHAR};
+    verifNoSpaceAtBounds = true;
+    verifNoForbiddenChar = true;
     response = malloc(sizeof(char) * 50);
-    printf("%s", sentence);
-    c = getchar();
-    if(c!='\n'){
-        response[i++] = c;
-    }
-    while(i < 50 && (c = getchar()) != '\n'){
-        response[i++] = c;
-    }
-    printf("----\n%s\n----", response);
+    i = 0;
+    do{
+        memset(response, 0, sizeof(char) * 50);
+        if(!verifNoSpaceAtBounds) {
+            printf("\033[31;01mVeuillez ne pas mettre d'espace à la fin ou au début de cette chaine de caractère\033[0;01m\n");
+        }else if(!verifNoForbiddenChar) {
+            printf("\033[31;01mVeuillez ne pas rentrer de caractère interdit (restriction du système de fichier NTFS) {%s}\033[0;01m\n", illegalChar);
+        }else if(i==50) {
+            printf("\033[31;01mVeuillez ne pas donner un nom de plus de 50 caractères\033[0;01m\n");
+        }
+        verifNoSpaceAtBounds = true;
+        verifNoForbiddenChar = true;
+        i = 0;
+        printf("%s", sentence);
+        c = getchar();
+        if(c!='\n'){
+            if(!isAFile || strchr(illegalChar, c)==0){
+                if(c==' '){
+                    verifNoSpaceAtBounds = false;
+                }else{
+                    verifNoSpaceAtBounds = true;
+                    response[i++] = c;
+                }
+            }else {
+                verifNoForbiddenChar = false;
+            }
+        }
+        while(i < 50 && (c = getchar()) != '\n'){
+            if(!isAFile || strchr(illegalChar, c)==0){
+                if(c==' '){
+                    verifNoSpaceAtBounds = false;
+                }else{
+                    verifNoSpaceAtBounds = true;
+                    response[i++] = c;
+                }
+            }else {
+                verifNoForbiddenChar = false;
+                continue;
+            }
+        }
+    }while((isAFile && !verifNoForbiddenChar) || i==0 || !verifNoSpaceAtBounds);
     return response;
 }
 
@@ -56,8 +103,10 @@ char movePlayer() {
     char directions[4] = "zqsd";
     char response;
     bool specialChar;
+    bool verifResponse;
     changemode(1);
     do {
+        verifResponse = false;
         specialChar = false;
         while ( !kbhit() );
         response = (char) getchar();
@@ -128,12 +177,9 @@ char promptChar(char * sentence, char * availableResponse, bool arrowKey) {
 }
 
 int getInt(){
-    int val;
-    if(scanf("%d",&val)!=1){
-        printf("Error when using scanf %d", errno);
-        exit(1);
-    }
-    return val;
+    char val;
+    scanf("%c",&val);
+    return val-'0';
 }
 
 int selectSaveFile(SaveFilesList saves) {

@@ -8,6 +8,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 /**
@@ -15,9 +16,20 @@
  */
 bool start(Maze * maze) {
     char response;
-    bool exitTheGame = false;
-    bool invalidPath = false;
+    unsigned int count;
+    unsigned i;
+    unsigned j;
+    unsigned int len;
     Direction direction;
+    bool exitTheGame;
+    bool invalidPath;
+    char * name;
+    exitTheGame = false;
+    invalidPath = false;
+    count = 0;
+    i = 0;
+    name = malloc(sizeof(char) * 50);
+    strcpy(name, "Hello");
     do{
         printMaze(*maze);
         if(invalidPath) {
@@ -51,6 +63,41 @@ bool start(Maze * maze) {
            invalidPath = true;
         }
     }while(!exitTheGame && !isGameFinished(*maze));
+    /*if(!exitTheGame) {
+        for(i=0; i < maze->numPlayers; i++) {
+            if(count > maze->score[i]){
+                break;
+            }
+        }
+        printf("Ok1\n");
+        if(i!=10) {
+            if(maze->numPlayers<10) {
+               (maze->numPlayers)++;
+            }
+            printf("Ok2\n");
+            for (j = maze->numPlayers-1; j > i; j--) {
+                maze->score[j] = maze->score[j-1];
+                printf("Ok3\n");
+                len = strlen(maze->namePlayers[j-1]) + 1;
+                if(strlen(maze->namePlayers[j]) < len ) {
+                    realloc(maze->namePlayers[j], len * sizeof(char));
+                }
+                strcpy(maze->namePlayers[j], maze->namePlayers[j-1]);
+            }
+            printf("Ok4\n");
+            printf("%s\n", name);
+            printf("%d\n", i);
+            printf("On attend\n");
+            printf("%s\n", name);
+            printf("L'erreur apparait\n");
+            maze->score[i] = count;
+            len = strlen(name) + 1;
+            if(((unsigned int) strlen(maze->namePlayers[i])) < len ) {
+                realloc(maze->namePlayers[i], len * sizeof(char));
+            }
+            strcpy(maze->namePlayers[i], name);
+        }
+    }*/
     return !exitTheGame;
 }
 
@@ -99,7 +146,9 @@ void afficheMenu() {
         printf("               `--`---'                   `----'   \n\n");
         val = 0;
         if(maze!=NULL){
-            /*TODO*/
+            printf("\033[32;01mThe maze %s is loaded\033[0;01m\n\n", maze->mazeName);
+        }else {
+            printf("\033[31;01mThere isn't any maze loaded\033[0;01m\n\n");
         }
         printf("\033[35;01m   Menu\n    \033[34;01m1 - Créer un labyrinthe\n    \033[33;01m2 - Charger un labyrinthe\n    \033[32;01m3 - Jouer\n    \033[31;01m4 - Quitter\n\n\033[37;01m");
         val = getInt();
@@ -107,7 +156,7 @@ void afficheMenu() {
         switch(val) {
             case 1:
                 maze = newMaze();
-                name = promptSentence("Comment voulez-vous appelez ce nouveau labyrinthe (Pas plus de 50 caractères) ?\n", &len);
+                name = promptSentence("Comment voulez-vous appelez ce nouveau labyrinthe (Pas plus de 50 caractères) ?\n", &len, true);
                 save(*maze, name, len);
                 if(promptBool("Do you want to load it ?")){
                     start(maze);
@@ -144,17 +193,13 @@ void afficheMenu() {
 	}while(val!=4);
 }
 int main(int argc, char ** argv) {
-    int i;
-    for(i=0; i<argc; i++) {
-        printf("%s", argv[i]);
-    }
     #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
     #endif
     #ifdef DEBUG
-    int rand;
+    int rand = 0;
     printf("Quelle valeur doit être utilisé pour le srand ? ");
-    getInt();
+    rand = getInt();
     srand(rand);
     #else
     srand(time(NULL));
