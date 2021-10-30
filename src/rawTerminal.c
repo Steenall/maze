@@ -1,3 +1,10 @@
+/**
+ * @file rawTerminal.c
+ * @brief Functions which help to switch raw and standard terminal mode
+ * @author Steenall
+ * @version 1.0.0
+ * @date 30 october 2021
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -10,11 +17,6 @@
 #else
 #include <termios.h>
 #endif
-
-/**
- * Inspiré par :
- * https://stackoverflow.com/questions/13114301/raw-terminal-mode-how-to-take-in-input
- **/
 
 void changemode(bool dir)
 {
@@ -32,8 +34,9 @@ void changemode(bool dir)
   else
     tcsetattr( STDIN_FILENO, TCSANOW, &oldTerminal);
 }
+
 #ifndef _WIN32
-/*Cette fonction est disponible sur windows*/
+
 int kbhit (void) 
 {
   struct timeval tv;

@@ -1,3 +1,10 @@
+/**
+ * @file saveManager.c
+ * @brief Functions related to saving or reading a save file
+ * @author Steenall
+ * @version 1.0.0
+ * @date 30 october 2021
+ */
 #include "maze.h"
 #include <dirent.h>
 #include <stdio.h>
@@ -17,7 +24,9 @@ void checkReturnValueForScanf(int valueOfScanf, int goodReturnValue) {
             printf("Error %d when calling scanf function\n", errno);
             exit(errno);
         }
-        printf("Unknown error when calling scanf, scanf didn't read or write all the values needed");
+        printf(
+            "Unknown error when calling scanf, scanf didn't read or write all the values needed"
+        );
     }
 }
 
@@ -57,7 +66,10 @@ SaveFilesList listSaveFiles() {
 		    exit(EXIT_FAILURE);
 		}
 	}
-    /*On estime qu'il est imporbable d'avoir plus de 256 fichiers de sauvegardes */
+    /**
+     * On estime qu'il est imporbable d'avoir
+     * plus de 256 fichiers de sauvegardes
+     */
     saveFilesList.saveFilesList = malloc(sizeof(char*)*256);
 	while ((d = readdir(dh)) != NULL)
 	{
@@ -86,7 +98,9 @@ Maze * readSaveFile(char * saveFile) {
     Maze * maze;
     char * path;
     maze = malloc(sizeof(Maze));
-    path = malloc(sizeof(char)*(strlen(saveFile)+5+strlen(SAVE_DIRECTORY_NAME)));
+    path = malloc(sizeof(char) * (
+                strlen(saveFile) + 5 + strlen(SAVE_DIRECTORY_NAME) )
+            );
     strcpy(path, SAVE_DIRECTORY_NAME);
     strcat(path, saveFile);
     if ((fptr = fopen(path, "r")) == NULL) {
@@ -104,7 +118,10 @@ Maze * readSaveFile(char * saveFile) {
         err = fscanf(fptr, "%[^\n]\n", maze->maze[i]);
         /* checkReturnValueForScanf(err, 1); */
     }
-    err = fscanf(fptr, "%u;%u\n", &(maze->playerPos[0]), &(maze->playerPos[1]));
+    err = fscanf(fptr, "%u;%u\n", &(maze->playerPos[0]),
+                    &(maze->playerPos[1])
+                );
+
     checkReturnValueForScanf(err, 2);
     err = fscanf(fptr, "%u;%u", &(maze->goalPos[0]), &(maze->goalPos[1]));
     printf("%u %u\n", maze->goalPos[0], maze->goalPos[1]);
@@ -156,12 +173,18 @@ int save(Maze maze, char * saveFile, int len) {
     strcat(path, saveFile);
     printf("%s", path);
     if(fileExist(path)){
-        if(!promptBool("Error, another file with the same name has been detected, would you like to overwrite it ?")){
+        if(!promptBool(
+                "Error, another file with the same name has been detected, would you like to overwrite it ?"
+            )) {
+
             return 1;
         }
     }
     if ((fptr = fopen(path, "w")) == NULL) {
-        printf("Error! File cannot be created or opened with writing permssion.");
+        printf(
+            "Error! File cannot be created or opened with writing permssion."
+            );
+
         exit(1);
     }
     fprintf(fptr, "%hd;%hd\n", maze.height, maze.width);
@@ -173,7 +196,10 @@ int save(Maze maze, char * saveFile, int len) {
     fclose(fptr);
     memcpy(path+strlen(path)-3,"score",5);
     if ((fptr = fopen(path, "w")) == NULL) {
-        printf("Error! File cannot be created or opened with writing permssion.");
+        printf(
+            "Error! File cannot be created or opened with writing permssion."
+            );
+
         exit(1);
     }
     fprintf(fptr, "%d", maze.numPlayers);
@@ -185,7 +211,9 @@ int save(Maze maze, char * saveFile, int len) {
 }
 #ifdef TESTSAVEMANAGER
 int main(void) {
-    printf("The saveFile test.cfg %s exist\n", fileExist("saves/test.cfg") ? "" : "doesn't");
+    printf("The saveFile test.cfg %s exist\n",
+        fileExist("saves/test.cfg") ? "" : "doesn't"
+    );
     save(*(newMaze()), "test123", 5);
     Maze * maze = readSaveFile("test123");
     printf("Sauvegarde et lecture effectué avec succès\n");

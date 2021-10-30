@@ -1,3 +1,10 @@
+/**
+ * @file util.c
+ * @brief Functions which could be needed by multiple files
+ * @author Steenall
+ * @version 1.0.0
+ * @date 30 october 2021
+ */
 #include "util.h"
 #include "maze.h"
 #include "saveManager.h"
@@ -8,23 +15,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#if defined _WIN32 || defined _WIN64
-#define KEY_UP 'H'
-#define KEY_DOWN 'K'
-#define KEY_RIGHT 'P'
-#define KEY_LEFT 'M'
-#define ARROW_KEYS "HKPM"
-#else
-#define KEY_UP 'A'
-#define KEY_DOWN 'B'
-#define KEY_RIGHT 'C'
-#define KEY_LEFT 'D'
-#define ARROW_KEYS "ABCD"
-#endif
-
-#define FORBIDDEN_CHAR "<>:\"/\\|?*\0"
-
-typedef enum {UPARROW=KEY_UP, DOWNARROW=KEY_DOWN, RIGHTARROW=KEY_RIGHT, LEFTARROW=KEY_LEFT}ArrowKey;
 
 int min(int a, int b) {
     return a < b ? a : b;
@@ -59,11 +49,17 @@ char * promptSentence(char * sentence, int * len, bool isAFile) {
     do{
         memset(response, 0, sizeof(char) * 50);
         if(!verifNoSpaceAtBounds) {
-            printf("\033[31;01mVeuillez ne pas mettre d'espace à la fin ou au début de cette chaine de caractère\033[0;01m\n");
+            printf("\033[31;01mVeuillez ne pas mettre d'espace à la fin ");
+            printf("ou au début de cette chaine de caractère\033[0;01m\n");
         }else if(!verifNoForbiddenChar) {
-            printf("\033[31;01mVeuillez ne pas rentrer de caractère interdit (restriction du système de fichier NTFS) {%s}\033[0;01m\n", illegalChar);
+            printf("\033[31;01mVeuillez ne pas rentrer de caractère interdit");
+            printf("(restriction du système de fichier NTFS) {%s}\033[0;01m\n",
+                    illegalChar
+                );
+
         }else if(i==50) {
-            printf("\033[31;01mVeuillez ne pas donner un nom de plus de 50 caractères\033[0;01m\n");
+            printf("\033[31;01mVeuillez ne pas donner un nom de plus de ");
+            printf("50 caractères\033[0;01m\n");
         }
         verifNoSpaceAtBounds = true;
         verifNoForbiddenChar = true;
@@ -95,11 +91,13 @@ char * promptSentence(char * sentence, int * len, bool isAFile) {
                 continue;
             }
         }
-    }while((isAFile && !verifNoForbiddenChar) || i==0 || !verifNoSpaceAtBounds);
+    }while((isAFile && !verifNoForbiddenChar) ||
+            i==0 || !verifNoSpaceAtBounds);
+            
     return response;
 }
 
-char movePlayer() {
+Direction movePlayer() {
     char directions[4] = "zqsd";
     char response;
     bool specialChar;
@@ -125,7 +123,7 @@ char movePlayer() {
     }else {
         response = *strchr(directions, response);
     }
-    return (Direction) response;
+    return response;
 }
 
 char promptChar(char * sentence, char * availableResponse, bool arrowKey) {
@@ -177,9 +175,19 @@ char promptChar(char * sentence, char * availableResponse, bool arrowKey) {
 }
 
 int getInt(){
-    char val;
-    scanf("%c",&val);
-    return val-'0';
+    int val;
+    int result;
+    do{
+        result = scanf("%d", &val);
+        if (result == EOF) {
+            printf("Impossible de lire le flux d'entrée");
+            exit(1);
+        }
+        if (result == 0) {
+            while (fgetc(stdin) != '\n');
+        }
+    }while(result==EOF||result==0);
+    return val;
 }
 
 int selectSaveFile(SaveFilesList saves) {

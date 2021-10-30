@@ -1,3 +1,10 @@
+/**
+ * @file game.c
+ * @brief The Main component which help to launch a game and save it
+ * @author Steenall
+ * @version 1.0.0
+ * @date 30 october 2021
+ */
 #include "maze.h"
 #include "saveManager.h"
 #include "util.h"
@@ -12,7 +19,11 @@
 #include <unistd.h>
 
 /**
- * @return if the user exit the maze manualy, it will returns true, else, it returns false 
+ * @brief Start a game of maze
+ * 
+ * @param maze The maze in whitch the player aims to play
+ * @return true The user exit the game manualy
+ * @return false The user finished the game
  */
 bool start(Maze * maze) {
     char response;
@@ -36,7 +47,10 @@ bool start(Maze * maze) {
             invalidPath = false;
             printf("\033[31;01mYou cannot move to this direction\033[0;01m\n");
         }
-        response = promptChar("In witch direction do you want to go\n   z (↑) q (←) d (→) s (↓) e (exit)", "zqsde", true);
+        response = promptChar(
+            "In which direction do you want to go\n   z (↑) q (←) d (→) s (↓) e (exit)",
+            "zqsde", true );
+            
         printf("\n\033[H\033[2J");
         switch (response)
         {
@@ -101,9 +115,15 @@ bool start(Maze * maze) {
     return !exitTheGame;
 }
 
-void afficheMenu() {
+/**
+ * @brief Print the menu and ask what the user want to do
+ * 
+ */
+void menu() {
     int val;
     int len;
+    int width;
+    int height;
     char * name;
     int i;
     SaveFilesList saveFiles;
@@ -146,17 +166,33 @@ void afficheMenu() {
         printf("               `--`---'                   `----'   \n\n");
         val = 0;
         if(maze!=NULL){
-            printf("\033[32;01mThe maze %s is loaded\033[0;01m\n\n", maze->mazeName);
+            printf("\033[32;01mThe maze %s is loaded\033[0;01m\n\n",
+                maze->mazeName);
         }else {
             printf("\033[31;01mThere isn't any maze loaded\033[0;01m\n\n");
         }
-        printf("\033[35;01m   Menu\n    \033[34;01m1 - Créer un labyrinthe\n    \033[33;01m2 - Charger un labyrinthe\n    \033[32;01m3 - Jouer\n    \033[31;01m4 - Quitter\n\n\033[37;01m");
+        printf("\033[35;01m   Menu\n");
+        printf("    \033[34;01m1 - Créer un labyrinthe\n");
+        printf("    \033[33;01m2 - Charger un labyrinthe\n");
+        printf("    \033[32;01m3 - Jouer\n");
+        printf("    \033[31;01m4 - Quitter\n\n\033[37;01m");
         val = getInt();
         printf("\033[H\033[2J\033[36;01m\033[0;01m");
         switch(val) {
             case 1:
-                maze = newMaze();
-                name = promptSentence("Comment voulez-vous appelez ce nouveau labyrinthe (Pas plus de 50 caractères) ?\n", &len, true);
+                do{
+                    printf("De quelle hauteur doit être le labyrinthe (minimum 5) ?\n");
+                    height = getInt();
+                }while(height<5);
+                do{
+                    printf("De quelle longueur doit être le labyrinthe (minimum 5) ?\n");
+                    width = getInt();
+                }while(width<5);
+                maze = newMaze(width, height);
+                name = promptSentence(
+                    "Comment voulez-vous appelez ce nouveau labyrinthe (pas plus de 50 caractères) ?\n",
+                    &len, true
+                );
                 save(*maze, name, len);
                 if(promptBool("Do you want to load it ?")){
                     start(maze);
@@ -174,7 +210,9 @@ void afficheMenu() {
             case 3:
                 printf("\033[H\033[2J");
                 if(maze==NULL){
-                    printf("\033[31;01mPlease load a maze before starting a game\n");
+                    printf(
+                       "\033[31;01mPlease load a maze before starting a game\n"
+                    );
                 }else{
                     start(maze);
                 }
@@ -192,6 +230,7 @@ void afficheMenu() {
         }
 	}while(val!=4);
 }
+
 int main(int argc, char ** argv) {
     #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
@@ -204,6 +243,6 @@ int main(int argc, char ** argv) {
     #else
     srand(time(NULL));
     #endif
-    afficheMenu();
+    menu();
     return 0;
 }

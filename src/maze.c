@@ -1,3 +1,10 @@
+/**
+ * @file maze.c
+ * @brief All the components needed to create and play on a maze
+ * @author Steenall
+ * @version 1.0.0
+ * @date 30 october 2021
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -9,7 +16,12 @@
 #define GOAL_CHAR '-'
 #define VOID_CHAR ' '
 
-typedef enum {Void=VOID_CHAR, Wall=WALL_CHAR, Player=PLAYER_CHAR, Goal=GOAL_CHAR} ElementMaze;
+typedef enum {
+    Void=VOID_CHAR,
+    Wall=WALL_CHAR,
+    Player=PLAYER_CHAR,
+    Goal=GOAL_CHAR
+} ElementMaze;
 
 
 char * directionToString(Direction direction) {
@@ -39,7 +51,7 @@ char * directionToString(Direction direction) {
     return tab;
 }
 
-Maze * newMaze() {
+Maze * newMaze(int width, int height) {
     Maze * maze;
     int i;
     int j;
@@ -57,9 +69,9 @@ Maze * newMaze() {
     currenty = 1;
     j = 1;
     maze = malloc(sizeof(Maze));
-    maze->maze = malloc(sizeof(int* )* HEIGHT);
-    for(i=0; i<=HEIGHT; i++) {
-        maze->maze[i] = calloc(WIDTH ,sizeof(int));
+    maze->maze = malloc(sizeof(int* )* height);
+    for(i=0; i<=height; i++) {
+        maze->maze[i] = calloc(width ,sizeof(int));
     }
     maze->mazeName = calloc(1, sizeof(char));
     /*We need * 2 size because we need to two information per box
@@ -71,19 +83,21 @@ Maze * newMaze() {
         maze->namePlayers[i] = calloc(1, sizeof(char));
     }
     maze->numPlayers = 0;
-    maze->height = HEIGHT;
-    maze->width = WIDTH;
+    maze->height = height;
+    maze->width = width;
     possible = malloc(sizeof(bool)*4);
-    visited = malloc(sizeof(int*) * WIDTH*HEIGHT-1);
-    for(i=0; i<WIDTH*HEIGHT-1; i++) {
+    visited = malloc(sizeof(int*) * width*height-1);
+    for(i=0; i<width*height-1; i++) {
         visited[i] = malloc(sizeof(int)*2);
     }
     visited[0][0] = 1;
     visited[0][1] = 1;
     count = 1;
-    for(i=0; i<HEIGHT; i++) {
-        for(j=0; j<WIDTH; j++) {
-            if( (i + 1) % 2 == 0 && (j + 1) % 2 == 0 && i != HEIGHT-1 && j != WIDTH-1){
+    for(i=0; i<height; i++) {
+        for(j=0; j<width; j++) {
+            if( (i + 1) % 2 == 0 && (j + 1) % 2 == 0 &&
+                i != height-1 && j != width-1) {
+                    
                 maze->maze[i][j] = '0';
                 count++;
             }else {
@@ -113,7 +127,7 @@ Maze * newMaze() {
             switch ((Direction) i)
             {
             case TOP:
-                if(currenty > 1 && maze->maze[currenty-2][currentx] != ' '){
+                if(currenty > 1 && maze->maze[currenty-2][currentx] != ' ') {
                     possible[i] = true;
                     noActionPossible = false;
                 }else {
@@ -122,7 +136,9 @@ Maze * newMaze() {
                 break;
             
             case BOTTOM:
-                if(currenty < (HEIGHT-2) && maze->maze[currenty+2][currentx] != ' '){
+                if(currenty < (height-2) &&
+                    maze->maze[currenty+2][currentx] != ' ') {
+
                     possible[i] = true;
                     noActionPossible = false;
                 }else {
@@ -131,7 +147,7 @@ Maze * newMaze() {
                 break;
             
             case LEFT:
-                if(currentx > 1 && maze->maze[currenty][currentx-2] != ' '){
+                if(currentx > 1 && maze->maze[currenty][currentx-2] != ' ') {
                     possible[i] = true;
                     noActionPossible = false;
                 }else {
@@ -140,7 +156,9 @@ Maze * newMaze() {
                 break;
             
             case RIGHT:
-                if(currentx < (WIDTH-2) && maze->maze[currenty][currentx+2] != ' '){
+                if(currentx < (width-2) &&
+                    maze->maze[currenty][currentx+2] != ' ') {
+
                     possible[i] = true;
                     noActionPossible = false;
                 }else {
@@ -153,7 +171,8 @@ Maze * newMaze() {
             }
         }
         #ifdef DEBUG
-        printf("TOP: %d\tBOTTOM: %d\tLEFT: %d\tRIGHT: %d\n", possible[0], possible[1], possible[2], possible[3]);
+        printf("TOP: %d\tBOTTOM: %d\tLEFT: %d\tRIGHT: %d\n",
+            possible[0], possible[1], possible[2], possible[3]);
         printf("%d;%d\n", currenty, currentx);
         #endif
         if(!noActionPossible){
@@ -238,7 +257,9 @@ void printMaze(Maze maze) {
     }
 }
 
-bool isMovementPossible(Maze maze, Direction direction, unsigned int posX, unsigned int posY) {
+bool isMovementPossible(Maze maze, Direction direction,
+                        unsigned int posX, unsigned int posY) {
+
     bool movementPossible;
     switch (direction)
     {
@@ -246,34 +267,42 @@ bool isMovementPossible(Maze maze, Direction direction, unsigned int posX, unsig
             movementPossible = posX!=0 && maze.maze[posX-1][posY] != WALL_CHAR;
             break;
         case BOTTOM:
-            movementPossible = posX != maze.height-1 && maze.maze[posX+1][posY] != WALL_CHAR;
+            movementPossible = posX != maze.height-1 &&
+                                maze.maze[posX+1][posY] != WALL_CHAR;
             break;
         case LEFT:
             movementPossible = posY!=0 && maze.maze[posX][posY-1] != WALL_CHAR;
             break;
         default:
-            movementPossible = posY != maze.width-1 && maze.maze[posX][posY+1] != WALL_CHAR;
+            movementPossible = posY != maze.width-1 &&
+                                maze.maze[posX][posY+1] != WALL_CHAR;
             break;
     }
     return movementPossible;
 }
 
 bool move(Maze * maze, Direction direction) {
-    if(isMovementPossible(*maze, direction, maze->playerPos[0], maze->playerPos[1])){
+    if(isMovementPossible(*maze, direction,
+        maze->playerPos[0], maze->playerPos[1])) {
+            
         maze->maze[maze->playerPos[0]][maze->playerPos[1]] = ' ';
         switch (direction)
         {
             case TOP:
-                maze->maze[--(maze->playerPos[0])][maze->playerPos[1]] = PLAYER_CHAR;
+                maze->maze[ --(maze->playerPos[0]) ][ maze->playerPos[1]]
+                        = PLAYER_CHAR;
                 break;
             case BOTTOM:
-                maze->maze[++(maze->playerPos[0])][maze->playerPos[1]] = PLAYER_CHAR;
+                maze->maze[ ++(maze->playerPos[0]) ][maze->playerPos[1]]
+                        = PLAYER_CHAR;
                 break;
             case LEFT:
-                maze->maze[maze->playerPos[0]][--(maze->playerPos[1])] = PLAYER_CHAR;
+                maze->maze[maze->playerPos[0]][ --(maze->playerPos[1]) ]
+                        = PLAYER_CHAR;
                 break;
             default:
-                maze->maze[maze->playerPos[0]][++(maze->playerPos[1])] = PLAYER_CHAR;
+                maze->maze[maze->playerPos[0]][ ++(maze->playerPos[1]) ]
+                        = PLAYER_CHAR;
                 break;
         }
         return true;
@@ -283,5 +312,6 @@ bool move(Maze * maze, Direction direction) {
 }
 
 bool isGameFinished(Maze maze) {
-    return maze.goalPos[0] == maze.playerPos[0] && maze.goalPos[1] == maze.playerPos[1];
+    return maze.goalPos[0] == maze.playerPos[0] &&
+            maze.goalPos[1] == maze.playerPos[1];
 }
