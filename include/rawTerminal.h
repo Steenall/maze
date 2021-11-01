@@ -17,7 +17,7 @@
  * @param dir If true, change the terminal mode into raw terminal,
  * else change it back to standard terminal
  */
-void changemode(bool);
+void changemode(bool raw);
 
 #ifndef _WIN32
 

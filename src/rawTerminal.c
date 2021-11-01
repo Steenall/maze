@@ -18,11 +18,11 @@
 #include <termios.h>
 #endif
 
-void changemode(bool dir)
+void changemode(bool raw)
 {
   static struct termios oldTerminal, newTerminal;
 
-  if ( dir)
+  if ( raw)
   {
     tcgetattr( STDIN_FILENO, &oldTerminal);
     newTerminal = oldTerminal;

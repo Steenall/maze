@@ -9,8 +9,6 @@
 #include "maze.h"
 #include "saveManager.h"
 #include "rawTerminal.h"
-#include <ctype.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -28,23 +26,22 @@ bool promptBool(char * sentence) {
     char response;
     do{
         printf("%s [Y/N] ", sentence);
-        response = getchar();
+        response = (char) getchar();
     }while(response!='Y'&&response!='y'&&response!='n'&&response!='N');
     return response == 'Y'|| response == 'y';
 }
 
 
-char * promptSentence(char * sentence, int * len, bool isAFile) {
+char * promptSentence(char * sentence, unsigned int * len, bool isAFile) {
     char c;
     char * response;
     int i;
-    int j;
     bool verifNoForbiddenChar;
     bool verifNoSpaceAtBounds;
     char * illegalChar = {FORBIDDEN_CHAR};
     verifNoSpaceAtBounds = true;
     verifNoForbiddenChar = true;
-    response = malloc(sizeof(char) * 50);
+    response = calloc(50, sizeof(char));
     i = 0;
     do{
         memset(response, 0, sizeof(char) * 50);
@@ -65,7 +62,7 @@ char * promptSentence(char * sentence, int * len, bool isAFile) {
         verifNoForbiddenChar = true;
         i = 0;
         printf("%s", sentence);
-        c = getchar();
+        c = (char) getchar();
         if(c!='\n'){
             if(!isAFile || strchr(illegalChar, c)==0){
                 if(c==' '){
@@ -78,7 +75,7 @@ char * promptSentence(char * sentence, int * len, bool isAFile) {
                 verifNoForbiddenChar = false;
             }
         }
-        while(i < 50 && (c = getchar()) != '\n'){
+        while(i < 48 && (c = (char) getchar()) != '\n'){
             if(!isAFile || strchr(illegalChar, c)==0){
                 if(c==' '){
                     verifNoSpaceAtBounds = false;
@@ -93,11 +90,11 @@ char * promptSentence(char * sentence, int * len, bool isAFile) {
         }
     }while((isAFile && !verifNoForbiddenChar) ||
             i==0 || !verifNoSpaceAtBounds);
-            
+    *len = i;
     return response;
 }
 
-Direction movePlayer() {
+/*Direction movePlayer() {
     char directions[4] = "zqsd";
     char response;
     bool specialChar;
@@ -111,7 +108,7 @@ Direction movePlayer() {
         printf("%d\n", response);
         if(response=='\033'){
             specialChar = true;
-            printf("%d\n", getchar());
+            getchar();
             response = (char) getchar();
         }
     }while( (specialChar && strstr(directions, &response) == 0) &&
@@ -119,19 +116,32 @@ Direction movePlayer() {
 
     changemode(0);
     if(specialChar && response){
-        response = response - UPARROW; /* Transform arrow key to zqsd key */
-    }else {
-        response = *strchr(directions, response);
+        switch (response)
+        {
+            case KEY_UP:
+                response = 'z';
+                break;
+            case KEY_DOWN:
+                response = 's';
+                break;
+            case KEY_RIGHT:
+                response = 'd';
+                break;            
+            default:
+                response = 'q';
+                break;
+        }
     }
     return response;
-}
+}*/
 
 char promptChar(char * sentence, char * availableResponse, bool arrowKey) {
     char response;
     bool specialChar;
-    changemode(1);
     do {
+        printf("%s", sentence);
         specialChar = false;
+        changemode(1);
         while ( !kbhit() );
         response = (char) getchar();
         #ifdef DEBUG
@@ -146,6 +156,7 @@ char promptChar(char * sentence, char * availableResponse, bool arrowKey) {
             #endif
             response = (char) getchar();
         }
+        changemode(0);
     }while( (!specialChar && strstr(availableResponse, &response) == 0) &&
         !(specialChar && arrowKey && strstr(ARROW_KEYS, &response)));
     changemode(0);
@@ -237,6 +248,9 @@ int selectSaveFile(SaveFilesList saves) {
                     selected++;
                 }
             }
+            break;
+        default:
+            break;
         }
         printf("%d\n", response);
         printf("%d\n", selected);

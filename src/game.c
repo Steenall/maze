@@ -14,9 +14,9 @@
 #include <windows.h>
 #endif
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 /**
  * @brief Start a game of maze
@@ -39,16 +39,16 @@ bool start(Maze * maze) {
     invalidPath = false;
     count = 0;
     i = 0;
-    name = malloc(sizeof(char) * 50);
-    strcpy(name, "Hello");
+    name = promptSentence("Quel est votre nom (pas plus de 50 caractères) ?\n",
+                            &len, false);
     do{
         printMaze(*maze);
         if(invalidPath) {
             invalidPath = false;
-            printf("\033[31;01mYou cannot move to this direction\033[0;01m\n");
+            printf("\033[31;01mVous ne pouvez pas aller dans cette direction\033[0;01m\n");
         }
         response = promptChar(
-            "In which direction do you want to go\n   z (↑) q (←) d (→) s (↓) e (exit)",
+            "Dans quelle direction voulez-vous allez ?\n   z (↑) q (←) d (→) s (↓) e (exit)",
             "zqsde", true );
             
         printf("\n\033[H\033[2J");
@@ -70,7 +70,7 @@ bool start(Maze * maze) {
                 exitTheGame = true;
                 break;
             default:
-                printf("There was a problem when parsing the direction");
+                printf("Un problème a été rencontré lors de l'analyse de la direction demandée");
                 exit(1);
         }
         if(!exitTheGame && !move(maze, direction)) {
@@ -121,7 +121,7 @@ bool start(Maze * maze) {
  */
 void menu() {
     int val;
-    int len;
+    unsigned int len;
     int width;
     int height;
     char * name;
@@ -166,10 +166,10 @@ void menu() {
         printf("               `--`---'                   `----'   \n\n");
         val = 0;
         if(maze!=NULL){
-            printf("\033[32;01mThe maze %s is loaded\033[0;01m\n\n",
+            printf("\033[32;01mLe labyrinthe %s est chargé\033[0;01m\n\n",
                 maze->mazeName);
         }else {
-            printf("\033[31;01mThere isn't any maze loaded\033[0;01m\n\n");
+            printf("\033[31;01mAucun labyrinthe n'est chargé\033[0;01m\n\n");
         }
         printf("\033[35;01m   Menu\n");
         printf("    \033[34;01m1 - Créer un labyrinthe\n");
@@ -181,20 +181,20 @@ void menu() {
         switch(val) {
             case 1:
                 do{
-                    printf("De quelle hauteur doit être le labyrinthe (minimum 5) ?\n");
+                    printf("De quelle hauteur doit être le labyrinthe (minimum 5, hauteur paire) ?\n");
                     height = getInt();
-                }while(height<5);
+                }while(height<5||height%2==0);
                 do{
-                    printf("De quelle longueur doit être le labyrinthe (minimum 5) ?\n");
+                    printf("De quelle longueur doit être le labyrinthe (minimum 5, longueur paire) ?\n");
                     width = getInt();
-                }while(width<5);
+                }while(width<5||width%2==0);
                 maze = newMaze(width, height);
                 name = promptSentence(
                     "Comment voulez-vous appelez ce nouveau labyrinthe (pas plus de 50 caractères) ?\n",
                     &len, true
                 );
                 save(*maze, name, len);
-                if(promptBool("Do you want to load it ?")){
+                if(promptBool("Voulez-vous le charger ?")){
                     start(maze);
                 }
                 freeMaze(maze);
@@ -211,7 +211,7 @@ void menu() {
                 printf("\033[H\033[2J");
                 if(maze==NULL){
                     printf(
-                       "\033[31;01mPlease load a maze before starting a game\n"
+                       "\033[31;01mVeuillez chargez un labyrinthe avant de jouer\n"
                     );
                 }else{
                     start(maze);
@@ -231,7 +231,7 @@ void menu() {
 	}while(val!=4);
 }
 
-int main(int argc, char ** argv) {
+int main(void) {
     #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
     #endif

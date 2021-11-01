@@ -72,6 +72,8 @@ int max(int a, int b);
 bool promptBool(char * sentence);
 
 /**
+ * @deprecated
+ * 
  * @brief Check which direction the user want to go, it support zqsd key and arrow key
  * 
  * @return Direction The direction the player choose
@@ -79,8 +81,6 @@ bool promptBool(char * sentence);
 Direction movePlayer();
 
 /**
- * @deprecated
- * 
  * @brief Ask the user to enter a char in raw terminal mode
  * 
  * @param sentence The sentence to print before asking to choose an answer
@@ -98,7 +98,7 @@ char promptChar(char * sentence, char * availableResponse, bool arrowKey);
  * @param isAFile if true, NTFS file limitations will be check on the sentence
  * @return char* The sentence
  */
-char * promptSentence(char * sentence, int * len, bool isAFile);
+char * promptSentence(char * sentence, unsigned int * len, bool isAFile);
 
 /**
  * @brief A top level function of scanf for decimal number which continue if

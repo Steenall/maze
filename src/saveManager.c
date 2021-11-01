@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "saveManager.h"
 #include <stdlib.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <string.h>
@@ -21,11 +22,11 @@
 void checkReturnValueForScanf(int valueOfScanf, int goodReturnValue) {
     if(valueOfScanf!=goodReturnValue) {
         if(valueOfScanf==EOF) {
-            printf("Error %d when calling scanf function\n", errno);
+            printf("Erreur %d lors de l'appel de la fonction scanf\n", errno);
             exit(errno);
         }
         printf(
-            "Unknown error when calling scanf, scanf didn't read or write all the values needed"
+            "Erreur inconnu lors de l'appel à la fonction scanf, des valeurs n'ont pas été lues/écrites"
         );
     }
 }
@@ -40,11 +41,11 @@ SaveFilesList listSaveFiles() {
     i = 0;
     dh = opendir(SAVE_DIRECTORY_NAME);
 	if (!dh) {
-		if (errno = ENOENT) {
+		if (errno == ENOENT) {
             #ifdef _WIN32
-            if(mkdir(SAVE_DIRECTORY_NAME)==0){
+            if(mkdir(SAVE_DIRECTORY_NAME)==0) {
             #else
-            if(mkdir(SAVE_DIRECTORY_NAME, S_IRWXU)==0){
+            if(mkdir(SAVE_DIRECTORY_NAME, S_IRWXU)==0) {
             #endif
                 dh = opendir(SAVE_DIRECTORY_NAME);
                 if(dh) {
@@ -52,18 +53,17 @@ SaveFilesList listSaveFiles() {
                     return saveFilesList;
                 }
                 else {
-			        perror("Unable to read the directory");
+			        perror("Impossible de lire le dossier");
 		            exit(EXIT_FAILURE);
                 }
             }
             else {
-                perror("Unable to create the save directory");
+                perror("Impossible de créer le dossier de sauvegarde");
 		        exit(EXIT_FAILURE);
             }
-		}
-        else {
-			perror("Unable to read the directory");
-		    exit(EXIT_FAILURE);
+		} else {
+            perror("Impossible de lire le dossier");
+            exit(EXIT_FAILURE);
 		}
 	}
     /**
@@ -81,10 +81,14 @@ SaveFilesList listSaveFiles() {
         #endif
         ext = strrchr(d->d_name, '.');
         if(strcmp(ext, EXTENSION)==0){
+            #ifdef DEBUG
             printf("Bonne extension !\n");
+            #endif
             saveFilesList.saveFilesList[i++] = d->d_name;
         }else{
+            #ifdef DEBUG
             printf("Mauvaise extension !\n");
+            #endif
         }
 	}
     saveFilesList.length = i;
@@ -99,12 +103,12 @@ Maze * readSaveFile(char * saveFile) {
     char * path;
     maze = malloc(sizeof(Maze));
     path = malloc(sizeof(char) * (
-                strlen(saveFile) + 5 + strlen(SAVE_DIRECTORY_NAME) )
+                strlen(saveFile) + 7 + strlen(SAVE_DIRECTORY_NAME) )
             );
     strcpy(path, SAVE_DIRECTORY_NAME);
     strcat(path, saveFile);
     if ((fptr = fopen(path, "r")) == NULL) {
-        printf("Error! File cannot be opened.");
+        printf("Erreur! Le fichier ne peut pas être ouvert");
         exit(1);
     }
     maze->mazeName = malloc(sizeof(char)*strlen(saveFile));
@@ -124,14 +128,18 @@ Maze * readSaveFile(char * saveFile) {
 
     checkReturnValueForScanf(err, 2);
     err = fscanf(fptr, "%u;%u", &(maze->goalPos[0]), &(maze->goalPos[1]));
+    #ifdef DEBUG
     printf("%u %u\n", maze->goalPos[0], maze->goalPos[1]);
     printf("%u %u\n", maze->playerPos[0], maze->playerPos[1]);
+    #endif
     checkReturnValueForScanf(err, 2);
     fclose(fptr);
-    memcpy(path+strlen(path)-3,"score",5);
+    memcpy(path + strlen(path) - 3, "score", 5);
+    #ifdef DEBUG
     printf("%s\n",path);
+    #endif
     if ((fptr = fopen(path, "r")) == NULL) {
-        printf("Error! File cannot be opened.");
+        printf("Erreur! Le fichier ne peut pas être ouvert");
         exit(1);
     }
     err = fscanf(fptr, "%u", &(maze->numPlayers));
@@ -140,12 +148,16 @@ Maze * readSaveFile(char * saveFile) {
     for(i=0; i<maze->numPlayers; i++){
         maze->namePlayers[i] = calloc(50, sizeof(char));
         err = fscanf(fptr, "%s:%u\n", maze->namePlayers[i], &(maze->score[i]));
+        #ifdef DEBUG
         printf("%s:%u", maze->namePlayers[i], maze->score[i]);
+        #endif
     }
     for(i; i<10; i++) {
         maze->namePlayers[i] = calloc(50, sizeof(char));
         maze->score[i] = 0;
+        #ifdef DEBUG
         printf("Score non enregistré\n");
+        #endif
     }
     fclose(fptr);
     return maze;
@@ -168,55 +180,58 @@ int save(Maze maze, char * saveFile, int len) {
         saveFile = strcat(saveFile, EXTENSION);
         printf("\n%s\n", saveFile);
     }
-    path = malloc(sizeof(char)*(len+5+strlen(SAVE_DIRECTORY_NAME)));
+    path = malloc(sizeof(char)*(len+8+strlen(SAVE_DIRECTORY_NAME)));
     strcpy(path, SAVE_DIRECTORY_NAME);
     strcat(path, saveFile);
+    #ifdef DEBUG
     printf("%s", path);
+    #endif
     if(fileExist(path)){
         if(!promptBool(
-                "Error, another file with the same name has been detected, would you like to overwrite it ?"
-            )) {
+            "Erreur, un autre fichier avec le même nom existe, voulez-vous l'écraser ?"
+        )) {
 
             return 1;
         }
     }
     if ((fptr = fopen(path, "w")) == NULL) {
         printf(
-            "Error! File cannot be created or opened with writing permssion."
-            );
+            "Erreur! Le fichier ne peut pas être ouvert ou créer avec les droits en écriture"
+        );
 
         exit(1);
     }
-    fprintf(fptr, "%hd;%hd\n", maze.height, maze.width);
+    fprintf(fptr, "%hu;%hu\n", maze.height, maze.width);
     for(i = 0; i < maze.height; i++) {
         fprintf(fptr, "%s\n", maze.maze[i]);
     }
-    fprintf(fptr, "%hd;%hd\n", maze.playerPos[0], maze.playerPos[1]);
-    fprintf(fptr, "%hd;%hd\n", maze.goalPos[0], maze.goalPos[1]);
+    fprintf(fptr, "%hu;%hu\n", maze.playerPos[0], maze.playerPos[1]);
+    fprintf(fptr, "%hu;%hu\n", maze.goalPos[0], maze.goalPos[1]);
     fclose(fptr);
+    /*We change the .cfg to .score*/
     memcpy(path+strlen(path)-3,"score",5);
     if ((fptr = fopen(path, "w")) == NULL) {
         printf(
-            "Error! File cannot be created or opened with writing permssion."
-            );
+            "Erreur! Le fichier de score ne peut pas être ouvert ou créer avec les droits en écriture"
+        );
 
         exit(1);
     }
     fprintf(fptr, "%d", maze.numPlayers);
     for(i=0; i < maze.numPlayers; i++) {
-        fprintf(fptr, "%s:%hd\n", maze.namePlayers[i], maze.score[i]);
+        fprintf(fptr, "%s:%hu\n", maze.namePlayers[i], maze.score[i]);
     }
     fclose(fptr);
     return 0;
 }
 #ifdef TESTSAVEMANAGER
 int main(void) {
-    printf("The saveFile test.cfg %s exist\n",
-        fileExist("saves/test.cfg") ? "" : "doesn't"
+    printf("Le fichier de sauvegarde test.cfg existe ? %s\n",
+        fileExist("saves/test.cfg") ? "Oui" : "non"
     );
     save(*(newMaze()), "test123", 5);
     Maze * maze = readSaveFile("test123");
-    printf("Sauvegarde et lecture effectué avec succès\n");
+    printf("Sauvegarde et lecture effectuée avec succès\n");
     printMaze(*maze);
     return 0;
 }

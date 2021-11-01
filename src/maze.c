@@ -16,13 +16,6 @@
 #define GOAL_CHAR '-'
 #define VOID_CHAR ' '
 
-typedef enum {
-    Void=VOID_CHAR,
-    Wall=WALL_CHAR,
-    Player=PLAYER_CHAR,
-    Goal=GOAL_CHAR
-} ElementMaze;
-
 
 char * directionToString(Direction direction) {
     char * tab = malloc(sizeof(char)*7);
@@ -63,15 +56,18 @@ Maze * newMaze(int width, int height) {
     bool noActionPossible;
     int current;
     int nb;
+    #ifdef DEBUG
+    printf("%d %d\n", width, height);
+    #endif
     nb = 1;
     current = 1;
     currentx = 1;
     currenty = 1;
     j = 1;
     maze = malloc(sizeof(Maze));
-    maze->maze = malloc(sizeof(int* )* height);
-    for(i=0; i<=height; i++) {
-        maze->maze[i] = calloc(width ,sizeof(int));
+    maze->maze = malloc(sizeof( char * ) * (height+1));
+    for(i=0; i<height; i++) {
+        maze->maze[i] = calloc(width+1 ,sizeof(char));
     }
     maze->mazeName = calloc(1, sizeof(char));
     /*We need * 2 size because we need to two information per box
@@ -228,12 +224,18 @@ Maze * newMaze(int width, int height) {
     }while(nb<(count-1));
     maze->maze[0][1] = PLAYER_CHAR;
     maze->maze[maze->height-1][maze->width-2] = GOAL_CHAR;
+    maze->goalPos[0] = height - 1;
+    maze->goalPos[1] = width - 2;
+    maze->playerPos[0] = 0;
+    maze->playerPos[1] = 1;
     free(possible);
     for(i=0; i<count; i++) {
         free(visited[i]);
     }
     free(visited);
+    #ifdef DEBUG
     printf("Labyrinthe généré\n");
+    #endif
     return maze;
 }
 
